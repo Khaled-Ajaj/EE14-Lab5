@@ -2,6 +2,11 @@
 #include "SysTick.h"
 #include "LED.h"
 #include "LCD.h"
+#include <stdio.h>
+
+// global variables
+//volatile int score_p1 = 51;
+//volatile int score_p2 = 51;
 
 void System_Clock_Init(void){
 	
@@ -55,7 +60,7 @@ int move_left(int curr_pos)
 	return curr_pos-1;
 }
 
-int hit_ball_left(int curr_pos)
+int hit_ball_left(int curr_pos, volatile int *delay)
 {
 	int i = 0;
 	/*if (joystick_pressed() && curr_pos != 0)
@@ -71,7 +76,8 @@ int hit_ball_left(int curr_pos)
 		for (i = 0; i < 5; i++)
 		{
 		curr_pos = move_right(curr_pos);
-		delay_fun(300000);
+		delay_fun(*delay);
+		*delay -= 1000;
 		}
 	}
 	else if ((!joystick_pressed() && curr_pos == 0))
@@ -84,7 +90,7 @@ int hit_ball_left(int curr_pos)
 }
 	
 	
-int hit_ball_right(int curr_pos)
+int hit_ball_right(int curr_pos, volatile int *delay)
 {
 	int i = 0;
 	if (joystick_pressed() && curr_pos == 5)
@@ -92,20 +98,20 @@ int hit_ball_right(int curr_pos)
 		for (i = 0; i < 5; i++)
 		{
 		curr_pos = move_left(curr_pos);
-		delay_fun(300000);
+		delay_fun(*delay);
+		*delay -= 1000;
 		}
 	}
 	else if ((!joystick_pressed() && curr_pos == 5))
 	{
 		curr_pos = move_right(curr_pos);
 	}
-	
 	return curr_pos;
 }	
 
 
 
-int player_serve(int player_num)
+int player_serve(int player_num, volatile int *delay)
 {
 	int pos;
 	if (player_num == 1)
@@ -124,8 +130,8 @@ int player_serve(int player_num)
 	{
 		
 	}
-		pos = hit_ball_left(pos);
-		pos = hit_ball_right(pos);
+		pos = hit_ball_left(pos, delay);
+		pos = hit_ball_right(pos, delay);
 		return pos;
 	
 	
@@ -134,11 +140,17 @@ int player_serve(int player_num)
 
 
 
+
 int main(void){
 	
 	volatile int ball_pos = -1;
-	int i = 0;
 	bool start = 0;
+	volatile int time_delay = 300000;
+	volatile int score_p1 = 0;
+	volatile int score_p2 = 0;
+	uint8_t score_p1_string = score_p1+48;
+	uint8_t score_p2_string = score_p2+48;
+	
 	// system clock initialize
 	System_Clock_Init();
 	
@@ -164,20 +176,38 @@ int main(void){
 	while(1)
 	{
 
-		ball_pos = hit_ball_left(ball_pos);
-		ball_pos = hit_ball_right(ball_pos);
+		ball_pos = hit_ball_left(ball_pos, &time_delay);
+		ball_pos = hit_ball_right(ball_pos, &time_delay);
 		
 		if(ball_pos == -1)
 		{
-			LCD_WriteChar((uint8_t *)"2", 0, 0, 0);
+			score_p2++;
+			score_p2_string = score_p2+48;
+			LCD_WriteChar((uint8_t *) "", 0, 0, 1);
+			LCD_WriteChar((uint8_t *) "", 0, 0, 3);
+			LCD_WriteChar((uint8_t *) "", 0, 0, 4);
+			LCD_WriteChar(&score_p2_string, 0, 0, 5);
+			LCD_WriteChar((uint8_t *) "", 0, 1, 2);
+			LCD_WriteChar(&score_p1_string, 0, 0, 0);
+			delay_fun(5000000);
 			LCD_Clear();
-			ball_pos = player_serve(2);
+			time_delay = 300000;
+			ball_pos = player_serve(2, &time_delay);
 		}
 		if(ball_pos == 6)
 		{
-			LCD_WriteChar((uint8_t *)"1", 0, 0, 0);
+			score_p1++;
+			score_p1_string = score_p1+48;
+			LCD_WriteChar(&score_p1_string, 0, 0, 0);
+			LCD_WriteChar((uint8_t *) "", 0, 0, 1);
+			LCD_WriteChar((uint8_t *) "", 0, 0, 3);
+			LCD_WriteChar((uint8_t *) "", 0, 0, 4);
+			LCD_WriteChar((uint8_t *) "", 0, 1, 2);
+			LCD_WriteChar(&score_p2_string, 0, 0, 5);
+			delay_fun(5000000);
 			LCD_Clear();
-			ball_pos = player_serve(1);
+			time_delay = 300000;
+			ball_pos = player_serve(1, &time_delay);
 		}
 		
 	
