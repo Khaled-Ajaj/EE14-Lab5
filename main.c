@@ -68,14 +68,6 @@ int move_left(int curr_pos)
 int hit_ball_left(int curr_pos, volatile int *delay)
 {
 	int i = 0;
-	/*if (joystick_pressed() && curr_pos != 0)
-	{
-		curr_pos = -1;
-		while (joystick_pressed())
-		{
-		}
-		return curr_pos;
-	}*/
 	if ( joystick1_pressed() && curr_pos == 0)
 	{
 		for (i = 0; i < 5; i++)
@@ -163,6 +155,22 @@ void show_score(int score1, int score2)
 	
 }
 
+void LED_show()
+{
+	LED_Init();
+	Green_LED_On();
+	Red_LED_Off();
+	delay_fun(250000);
+	Green_LED_Toggle();
+	delay_fun(50000);
+	Red_LED_Toggle();
+	delay_fun(50000);
+	
+	
+}
+
+
+
 
 void movingString(uint8_t* str, uint8_t len) {
 	// Scrolls a string across the LCD
@@ -190,6 +198,7 @@ void movingString(uint8_t* str, uint8_t len) {
 			LCD_WriteChar(cur+j,dot,colon,j); //print character currently being pointed to
 		}
 		cur = str + i; //set current character to the next character in the string
+		LED_show();
 		delay_fun(500000); //delay between LCD changes
 	}
 }
@@ -204,8 +213,6 @@ int main(void){
 	volatile int score_p1 = 0;
 	volatile int score_p2 = 0;
 	uint8_t *win_msg;
-	//uint8_t score_p1_string = score_p1+48;
-	//uint8_t score_p2_string = score_p2+48;
 	
 	// system clock initialize
 	System_Clock_Init();
@@ -219,6 +226,16 @@ int main(void){
 	//set to input mode
 	GPIOA->MODER &= ~(3U);
 	GPIOA->MODER &= ~(3U<<6);
+	GPIOA->PUPDR &= ~(3U);
+	GPIOA->PUPDR &= ~(3U<<6);
+	GPIOA->PUPDR |= (2U);
+	GPIOA->PUPDR |= (2U<<6);
+	
+	
+	
+	
+	
+	
 	
 	LCD_WriteChar((uint8_t *) "-", 0, 0, 0);
 	
@@ -270,7 +287,6 @@ int main(void){
 				while(1)
 				{
 				movingString(win_msg, 40);
-				LCD_Clear();
 				}
 			}
 			
